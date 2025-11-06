@@ -135,11 +135,17 @@ class ImageRegistration(pymia_fltr.Filter):
 
         # todo: replace this filter by a registration. Registration can be costly, therefore, we provide you the
         # transformation, which you only need to apply to the image!
-        warnings.warn('No registration implemented. Returning unregistered image')
+        
 
         atlas = params.atlas
         transform = params.transformation
         is_ground_truth = params.is_ground_truth  # the ground truth will be handled slightly different
+
+        if is_ground_truth:
+            image = sitk.Resample(image, atlas, transform, sitk.sitkNearestNeighbor, 0.0, image.GetPixelID())
+        else:
+            image = sitk.Resample(image, atlas, transform, sitk.sitkLinear, 0.0, image.GetPixelID())
+
 
         # note: if you are interested in registration, and want to test it, have a look at
         # pymia.filtering.registration.MultiModalRegistration. Think about the type of registration, i.e.
