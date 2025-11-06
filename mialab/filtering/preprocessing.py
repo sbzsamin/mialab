@@ -6,7 +6,7 @@ import warnings
 
 import pymia.filtering.filter as pymia_fltr
 import SimpleITK as sitk
-
+import numpy as np
 
 class ImageNormalization(pymia_fltr.Filter):
     """Represents a normalization filter."""
@@ -26,12 +26,13 @@ class ImageNormalization(pymia_fltr.Filter):
             sitk.Image: The normalized image.
         """
 
-        img_arr = sitk.GetArrayFromImage(image)
+        img_arr = sitk.GetArrayFromImage(image).astype(np.float32)
 
         # todo: normalize the image using numpy
-        warnings.warn('No normalization implemented. Returning unprocessed image.')
+        
+        img_norm = (img_arr - np.min(img_arr)) / (np.max(img_arr) - np.min(img_arr))
 
-        img_out = sitk.GetImageFromArray(img_arr)
+        img_out = sitk.GetImageFromArray(img_norm)
         img_out.CopyInformation(image)
 
         return img_out
@@ -78,8 +79,14 @@ class SkullStripping(pymia_fltr.Filter):
         mask = params.img_mask  # the brain mask
 
         # todo: remove the skull from the image by using the brain mask
-        warnings.warn('No skull-stripping implemented. Returning unprocessed image.')
-
+        
+        mask_arr = sitk.GetArrayFromImage(mask)
+        img_org = image
+        img_arr = sitk.GetArrayFromImage(image)
+        img_arr = img_arr * mask_arr
+        image = sitk.GetImageFromArray(img_arr)
+        image.CopyInformation(img_org)
+        
         return image
 
     def __str__(self):
@@ -128,11 +135,17 @@ class ImageRegistration(pymia_fltr.Filter):
 
         # todo: replace this filter by a registration. Registration can be costly, therefore, we provide you the
         # transformation, which you only need to apply to the image!
-        warnings.warn('No registration implemented. Returning unregistered image')
+        
 
         atlas = params.atlas
         transform = params.transformation
         is_ground_truth = params.is_ground_truth  # the ground truth will be handled slightly different
+
+        if is_ground_truth:
+            image = sitk.Resample(image, atlas, transform, sitk.sitkNearestNeighbor, 0.0, image.GetPixelID())
+        else:
+            image = sitk.Resample(image, atlas, transform, sitk.sitkLinear, 0.0, image.GetPixelID())
+
 
         # note: if you are interested in registration, and want to test it, have a look at
         # pymia.filtering.registration.MultiModalRegistration. Think about the type of registration, i.e.
