@@ -26,12 +26,13 @@ class ImageNormalization(pymia_fltr.Filter):
             sitk.Image: The normalized image.
         """
 
-        img_arr = sitk.GetArrayFromImage(image)
+        img_arr = sitk.GetArrayFromImage(image).astype(np.float32)
 
         # todo: normalize the image using numpy
-        warnings.warn('No normalization implemented. Returning unprocessed image.')
+        
+        img_norm = (img_arr - np.min(img_arr)) / (np.max(img_arr) - np.min(img_arr))
 
-        img_out = sitk.GetImageFromArray(img_arr)
+        img_out = sitk.GetImageFromArray(img_norm)
         img_out.CopyInformation(image)
 
         return img_out
