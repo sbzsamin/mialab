@@ -6,7 +6,7 @@ import warnings
 
 import pymia.filtering.filter as pymia_fltr
 import SimpleITK as sitk
-
+import numpy as np
 
 class ImageNormalization(pymia_fltr.Filter):
     """Represents a normalization filter."""
